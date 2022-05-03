@@ -30,8 +30,11 @@ public class CuboidController {
 
     @PostMapping()
     public ResponseEntity<CuboidDTO> create(@Valid @RequestBody final CuboidDTO cuboidDTO) {
-        CuboidDTO cuboid = service.create(cuboidDTO);
-        return new ResponseEntity<>(cuboid, HttpStatus.CREATED);
+    	if(cuboidDTO.isValid()) {
+    		CuboidDTO cuboid = service.create(cuboidDTO);
+        	return new ResponseEntity<>(cuboid, HttpStatus.CREATED);
+    	}
+    	return new ResponseEntity<>(cuboidDTO, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @GetMapping

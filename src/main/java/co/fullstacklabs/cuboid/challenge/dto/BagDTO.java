@@ -23,7 +23,23 @@ public class BagDTO {
     @NotNull(message = "Bag title can't be null.")
     @Size(min = 1, max = Bag.TITLE_MAX_SIZE, message = "Bag title maximum size is " + Bag.TITLE_MAX_SIZE + " characters.")
     private String title;
-    private Double payloadVolume;
+    @Builder.Default
+    private Double payloadVolume  = 0.0;
     private Double availableVolume;
     private List<CuboidDTO> cuboids;
+    
+    public Double getPayloadVolume() {
+    	this.payloadVolume = cuboids.stream().reduce(0.0, (acc, curr) -> acc + curr.netVolume(), Double::sum );
+    	return this.payloadVolume;
+    }
+    
+    public Double getAvailableVolume() {
+    	availableVolume =  volume - getPayloadVolume();
+    	return availableVolume;
+    }
+    
+    public BagDTO (Double volume, List<CuboidDTO> cuboids ) {
+		this.volume = volume;
+		this.cuboids = cuboids;
+    }
 }

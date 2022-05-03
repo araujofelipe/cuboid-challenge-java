@@ -1,19 +1,22 @@
 package co.fullstacklabs.cuboid.challenge.service.impl;
 
-import co.fullstacklabs.cuboid.challenge.dto.CuboidDTO;
-import co.fullstacklabs.cuboid.challenge.exception.ResourceNotFoundException;
-import co.fullstacklabs.cuboid.challenge.model.Bag;
-import co.fullstacklabs.cuboid.challenge.model.Cuboid;
-import co.fullstacklabs.cuboid.challenge.repository.BagRepository;
-import co.fullstacklabs.cuboid.challenge.repository.CuboidRepository;
-import co.fullstacklabs.cuboid.challenge.service.CuboidService;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import co.fullstacklabs.cuboid.challenge.dto.BagDTO;
+import co.fullstacklabs.cuboid.challenge.dto.CuboidDTO;
+import co.fullstacklabs.cuboid.challenge.exception.ResourceNotFoundException;
+import co.fullstacklabs.cuboid.challenge.exception.UnprocessableEntityException;
+import co.fullstacklabs.cuboid.challenge.model.Bag;
+import co.fullstacklabs.cuboid.challenge.model.Cuboid;
+import co.fullstacklabs.cuboid.challenge.repository.BagRepository;
+import co.fullstacklabs.cuboid.challenge.repository.CuboidRepository;
+import co.fullstacklabs.cuboid.challenge.service.CuboidService;
 
 /**
  * Implementation class for BagService
@@ -48,12 +51,20 @@ public class CuboidServiceImpl implements CuboidService {
     public CuboidDTO create(CuboidDTO cuboidDTO) {
         Bag bag = getBagById(cuboidDTO.getBagId());
         Cuboid cuboid = mapper.map(cuboidDTO, Cuboid.class);
+        if(!checkVolumeAvailable(bag, cuboidDTO)) {
+        	throw new UnprocessableEntityException("This bag has not available capacity");
+        }
         cuboid.setBag(bag);
         cuboid = repository.save(cuboid);
         return mapper.map(cuboid, CuboidDTO.class);
     }
 
-    /**
+    private boolean checkVolumeAvailable(Bag bag, CuboidDTO cuboid) {
+    	BagDTO bagDTO = new BagDTO(bag.getVolume(), bag.getCuboids().stream().map(c -> mapper.map(c, CuboidDTO.class)).collect(Collectors.toList()));
+    	return bagDTO.getAvailableVolume() > cuboid.netVolume();
+	}
+
+	/**
      * List all cuboids
      * @return List<CuboidDTO>
      */
